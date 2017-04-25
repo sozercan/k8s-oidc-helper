@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -24,13 +25,13 @@ var clientIDFlag = flag.String("client-id", "", "The ClientID for the applicatio
 var clientSecretFlag = flag.String("client-secret", "", "The ClientSecret for the application")
 var appFile = flag.StringP("config", "c", "", "Path to a json file containing your application's ClientID and ClientSecret. Supercedes the --client-id and --client-secret flags.")
 
-const oauthUrl = "https://accounts.google.com/o/oauth2/auth?redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&client_id=%s&scope=openid+email+profile&approval_prompt=force&access_type=offline"
+const oauthUrl = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=https://localhost&scope=openid offline_access user.read"
 
 type ConfigFile struct {
-	Installed *GoogleConfig `json:"installed"`
+	Installed *MicrosoftConfig `json:"installed"`
 }
 
-type GoogleConfig struct {
+type MicrosoftConfig struct {
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 }
@@ -41,7 +42,7 @@ type TokenResponse struct {
 	IdToken      string `json:"id_token"`
 }
 
-func readConfig(path string) (*GoogleConfig, error) {
+func readConfig(path string) (*MicrosoftConfig, error) {
 	f, err := os.Open(path)
 	defer f.Close()
 	if err != nil {
@@ -55,16 +56,18 @@ func readConfig(path string) (*GoogleConfig, error) {
 	return cf.Installed, nil
 }
 
-// Get the id_token and refresh_token from google
+// Get the id_token and refresh_token from microsoft
 func getTokens(clientID, clientSecret, code string) (*TokenResponse, error) {
 	val := url.Values{}
 	val.Add("grant_type", "authorization_code")
-	val.Add("redirect_uri", "urn:ietf:wg:oauth:2.0:oob")
+	val.Add("redirect_uri", "https://localhost")
 	val.Add("client_id", clientID)
 	val.Add("client_secret", clientSecret)
 	val.Add("code", code)
+	val.Add("resource", "https://graph.microsoft.com")
 
-	resp, err := http.PostForm("https://www.googleapis.com/oauth2/v3/token", val)
+	resp, err := http.PostForm("https://login.microsoftonline.com/common/oauth2/token", val)
+
 	defer resp.Body.Close()
 	if err != nil {
 		return nil, err
@@ -100,17 +103,23 @@ type APConfig struct {
 }
 
 type UserInfo struct {
-	Email string `json:"email"`
+	Mail string `json:"mail"`
 }
 
 func getUserEmail(accessToken string) (string, error) {
-	uri, _ := url.Parse("https://www.googleapis.com/oauth2/v1/userinfo")
-	q := uri.Query()
-	q.Set("alt", "json")
-	q.Set("access_token", accessToken)
-	uri.RawQuery = q.Encode()
-	resp, err := http.Get(uri.String())
+	client := &http.Client{}
+	postData := make([]byte, 100)
+	req, err := http.NewRequest("GET", "https://graph.microsoft.com/v1.0/me/", bytes.NewReader(postData))
+	if err != nil {
+		os.Exit(1)
+	}
+	req.Header.Add("Authorization", accessToken)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+
 	defer resp.Body.Close()
+
 	if err != nil {
 		return "", err
 	}
@@ -119,7 +128,7 @@ func getUserEmail(accessToken string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return ui.Email, nil
+	return ui.Mail, nil
 }
 
 func generateUser(email, clientId, clientSecret, idToken, refreshToken string) *KubectlUser {
@@ -131,7 +140,7 @@ func generateUser(email, clientId, clientSecret, idToken, refreshToken string) *
 					ClientID:     clientId,
 					ClientSecret: clientSecret,
 					IdToken:      idToken,
-					IdpIssuerUrl: "https://accounts.google.com",
+					IdpIssuerUrl: "https://login.microsoftonline.com/common/v2.0",
 					RefreshToken: refreshToken,
 				},
 				Name: "oidc",
@@ -154,7 +163,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	var gcf *GoogleConfig
+	var gcf *MicrosoftConfig
 	var err error
 	if len(*appFile) > 0 {
 		gcf, err = readConfig(*appFile)
@@ -182,7 +191,7 @@ func main() {
 	}
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Enter the code Google gave you: ")
+	fmt.Print("Enter the code Microsoft gave you: ")
 	code, _ := reader.ReadString('\n')
 	code = strings.TrimSpace(code)
 
@@ -208,5 +217,4 @@ func main() {
 	}
 	fmt.Println("\n# Add the following to your ~/.kube/config")
 	fmt.Println(string(response))
-
 }
