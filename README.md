@@ -1,15 +1,14 @@
-# k8s-oidc-helper
+# k8s-oidc-helper-azure
 
 This is a small helper tool to get a user get authenticated with
-[Kubernetes OIDC](http://kubernetes.io/docs/admin/authentication/) using Google
-as the Identity Provider.
+[Kubernetes OIDC](http://kubernetes.io/docs/admin/authentication/) using Microsoft Azure AD as the Identity Provider.
 
 Given a ClientID and ClientSecret, the tool will output the necessary
 configuration for `kubectl` that you can add to `~/.kube/config`
 
 ```
 $ k8s-oidc-helper -c ./client_secret.json
-Enter the code Google gave you: <code>
+Enter the code Microsoft gave you: <code>
 
 # Add the following to your ~/.kube/config
 users:
@@ -20,7 +19,7 @@ users:
         client-id: <client-id>
         client-secret: <client-secret>
         id-token: <id-token>
-        idp-issuer-url: https://accounts.google.com
+        idp-issuer-url: https://login.microsoftonline.com/common/v2.0
         refresh-token: <refresh-token>
       name: oidc
 ```
@@ -29,18 +28,11 @@ users:
 
 There is a bit of setup involved before you can use this tool.
 
-First, you'll need to create a project and OAuth 2.0 Credential in the Google
-Cloud Console. You can follow [this guide](https://developers.google.com/identity/sign-in/web/devconsole-project)
-on creating an application, but do *NOT* create a web application. You'll need
-to select "Other" as the Application Type. Once that is created, you can
-download the ClientID and ClientSecret as a JSON file for ease of use.
-
-
 Second, your kube-apiserver will need the following flags on to use OpenID Connect.
 
 ```
---oidc-issuer-url=https://accounts.google.com \
---oidc-username-claim=email \
+--oidc-issuer-url=https://login.microsoftonline.com/common/v2.0 \
+--oidc-username-claim=mail \
 --oidc-client-id=<Your client ID>\
 ```
 
@@ -76,7 +68,7 @@ roleRef:
 ## Installation
 
 ```
-go get github.com/micahhausler/k8s-oidc-helper
+go get github.com/sozercan/k8s-oidc-helper-azure
 ```
 
 ## Usage
