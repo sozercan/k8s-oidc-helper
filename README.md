@@ -7,7 +7,7 @@ Given a ClientID and ClientSecret, the tool will output the necessary
 configuration for `kubectl` that you can add to `~/.kube/config`
 
 ```
-$ k8s-oidc-helper -c ./client_secret.json
+$ k8s-oidc-helper-azure -c ./client_secret.json
 Enter the code Microsoft gave you: <code>
 
 # Add the following to your ~/.kube/config
@@ -74,7 +74,7 @@ go get github.com/sozercan/k8s-oidc-helper-azure
 ## Usage
 
 ```
-Usage of k8s-oidc-helper:
+Usage of k8s-oidc-helper-azure:
 
   --client-id string
         The ClientID for the application
