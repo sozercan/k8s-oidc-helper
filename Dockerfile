@@ -1,15 +1,15 @@
 # To build:
-# $ docker run --rm -v $(pwd):/go/src/github.com/micahhausler/k8s-oidc-helper -w /go/src/github.com/micahhausler/k8s-oidc-helper golang:1.7  go build -v -a -tags netgo -installsuffix netgo -ldflags '-w'
-# $ docker build -t micahhausler/k8s-oidc-helper .
+# $ docker run --rm -v $(pwd):/go/src/github.com/sozercan/k8s-oidc-helper-azure -w /go/src/github.com/sozercan/k8s-oidc-helper-azure golang:1.7  go build -v -a -tags netgo -installsuffix netgo -ldflags '-w'
+# $ docker build -t sozercan/k8s-oidc-helper-azure .
 #
 # To run:
-# $ docker run micahhausler/k8s-oidc-helper
+# $ docker run sozercan/k8s-oidc-helper-azure
 
 FROM busybox
 
-MAINTAINER Micah Hausler, <hausler.m@gmail.com>
+MAINTAINER Sertac Ozercan, <sozercan@gmail.com>
 
-COPY k8s-oidc-helper /bin/k8s-oidc-helper
-RUN chmod 755 /bin/k8s-oidc-helper
+COPY k8s-oidc-helper-azure /bin/k8s-oidc-helper-azure
+RUN chmod 755 /bin/k8s-oidc-helper-azure
 
-ENTRYPOINT ["/bin/k8s-oidc-helper"]
+ENTRYPOINT ["/bin/k8s-oidc-helper-azure"]
