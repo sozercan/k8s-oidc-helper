@@ -25,7 +25,7 @@ var clientIDFlag = flag.String("client-id", "", "The ClientID for the applicatio
 var clientSecretFlag = flag.String("client-secret", "", "The ClientSecret for the application")
 var appFile = flag.StringP("config", "c", "", "Path to a json file containing your application's ClientID and ClientSecret. Supercedes the --client-id and --client-secret flags.")
 
-const oauthUrl = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=https://localhost&scope=openid offline_access user.read"
+const oauthUrl = "https://login.microsoftonline.com/common/oauth2/authorize?client_id=%s&response_type=code&redirect_uri=https://localhost&scope=openid%20offline%20access%20user.read"
 
 type ConfigFile struct {
 	Installed *MicrosoftConfig `json:"installed"`
@@ -140,7 +140,7 @@ func generateUser(email, clientId, clientSecret, idToken, refreshToken string) *
 					ClientID:     clientId,
 					ClientSecret: clientSecret,
 					IdToken:      idToken,
-					IdpIssuerUrl: "https://login.microsoftonline.com/common/v2.0",
+					IdpIssuerUrl: "https://login.microsoftonline.com/<YOUR TENANT ID>/v2.0",
 					RefreshToken: refreshToken,
 				},
 				Name: "oidc",
