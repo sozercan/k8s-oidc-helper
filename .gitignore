@@ -11,7 +11,7 @@ _test
 coverage.out
 
 # Build artifacts
-k8s-oidc-helper
+k8s-oidc-helper-azure
 
 # Architecture specific extensions/prefixes
 *.[568vq]
@@ -33,3 +33,4 @@ _testmain.go
 
 # Ignore vim files
 *.swp
+client_secret.json
